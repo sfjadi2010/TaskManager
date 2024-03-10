@@ -11,5 +11,9 @@
         <Entry />
         <Label Text="Due" />
         <DatePicker />
+        <StackLayout Orientation="Horizontal">
+            <Switch />
+            <Label Text="Completed" />
+        </StackLayout>
     </StackLayout>
 </ContentPage>
