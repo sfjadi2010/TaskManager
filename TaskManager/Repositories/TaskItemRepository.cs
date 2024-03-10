@@ -1,6 +1,6 @@
-﻿namespace TaskManager.Repositories;
+﻿using SQLite;
+namespace TaskManager.Repositories;
 
-using SQLite;
 using TaskManager.Models;
 
 public class TaskItemRepository : ITaskItemRepository
@@ -13,7 +13,7 @@ public class TaskItemRepository : ITaskItemRepository
     public async Task AddItemAsync(TaskItem item)
     {
         await CreateConnectionAsync();
-        await _connection.InsertAsync(item);
+        // await _connection.InsertAsync(item);
         OnItemAdded?.Invoke(this, item);
     }
 
@@ -56,10 +56,10 @@ public class TaskItemRepository : ITaskItemRepository
         if (await _connection.Table<TaskItem>().CountAsync() == 0)
         {
             await _connection.InsertAsync(
-                new TaskItem () 
-                { 
-                    Title = "Welcome to TaskManager", 
-                    Due = DateTime.Now 
+                new TaskItem()
+                {
+                    Title = "Welcome to TaskManager",
+                    Due = DateTime.Now
                 });
         }
     }
