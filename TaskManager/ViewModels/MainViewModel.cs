@@ -11,8 +11,13 @@ public partial class MainViewModel : ViewModel
 {
     private readonly ITaskItemRepository _taskItemRepository;
     private readonly IServiceProvider _serviceProvider;
+
     [ObservableProperty]
     ObservableCollection<TaskItemViewModel> items;
+
+    [ObservableProperty]
+    TaskItemViewModel selectedItem;
+
     public MainViewModel(ITaskItemRepository taskItemRepository, IServiceProvider serviceProvider)
     {
         taskItemRepository.OnItemAdded += (sender, item) => items.Add(CreateTaskItemViewModel(item));
@@ -43,5 +48,25 @@ public partial class MainViewModel : ViewModel
     private void ItemStatusChanged(object sender, EventArgs e)
     {
 
+    }
+
+    partial void OnSelectedItemChanged(TaskItemViewModel value)
+    {
+        if (value == null)
+        {
+            return;
+        }
+        MainThread.BeginInvokeOnMainThread(async() => { 
+            await NavigateToItemAsync(value);
+        });
+    }
+
+    private async Task NavigateToItemAsync(TaskItemViewModel item)
+    {
+        var itemView = _serviceProvider.GetRequiredService<ItemView>();
+        var vm = itemView.BindingContext as ItemViewModel;
+        vm.Item = item.Item;
+        itemView.Title = "Edit Task";
+        await Navigation.PushAsync(itemView);
     }
 }
