@@ -18,6 +18,9 @@ public partial class MainViewModel : ViewModel
     [ObservableProperty]
     TaskItemViewModel selectedItem;
 
+    [ObservableProperty]
+    bool showAll;
+
     public MainViewModel(ITaskItemRepository taskItemRepository, IServiceProvider serviceProvider)
     {
         taskItemRepository.OnItemAdded += (sender, item) => items.Add(CreateTaskItemViewModel(item));
@@ -34,6 +37,10 @@ public partial class MainViewModel : ViewModel
     private async Task LoadDataAsync()
     {
         var items = await _taskItemRepository.GetItemsAsync();
+        if (!ShowAll)
+        {
+            items = items.Where(item => !item.Completed).ToList();
+        }
         var itemViewModels = items.Select(item => CreateTaskItemViewModel(item));
         Items = new ObservableCollection<TaskItemViewModel>(itemViewModels);
     }
@@ -45,12 +52,26 @@ public partial class MainViewModel : ViewModel
         return taskItemViewModel;
     }
 
-    private void ItemStatusChanged(object sender, EventArgs e)
+    [RelayCommand]
+    private async Task ToggleFilterAsync()
     {
-
+        ShowAll = !ShowAll;
+        await LoadDataAsync();
     }
 
-    partial void OnSelectedItemChanged(TaskItemViewModel value)
+    private void ItemStatusChanged(object sender, EventArgs e)
+    {
+        if (sender is TaskItemViewModel taskItemViewModel)
+        {
+            if (!ShowAll && taskItemViewModel.Item.Completed)
+            {
+                Items.Remove(taskItemViewModel);
+            }
+            Task.Run(async () => await _taskItemRepository.UpdateItemAsync(taskItemViewModel.Item));
+        }
+    }
+
+    partial void OnSelectedItemChanging(TaskItemViewModel value)
     {
         if (value == null)
         {
